@@ -3,6 +3,8 @@ import pprint
 from typing import List, Dict, Optional
 import pandas as pd
 
+import yaml_io
+
 class SpreadsheetFormat:
     """Attributes of Register Block"""
     def __init__(self):
@@ -43,7 +45,7 @@ class SpreadsheetFormat:
                 }
             },
             {
-                'name': 'assignment',
+                'name': 'bit_assignment',
                 'cell_location': {
                     'row': 3,
                     'col': 4
@@ -57,14 +59,14 @@ class SpreadsheetFormat:
                 }
             },
             {
-                'name': 'bitwidth',
+                'name': 'width',
                 'cell_location': {
                     'row': 3,
                     'col': 6
                 }
             },
             {
-                'name': 'type',
+                'name': 'bit_field_type',
                 'cell_location': {
                     'row': 3,
                     'col': 7
@@ -143,68 +145,68 @@ class Register:
 
     def append_bit_field(
         self, name: str,
-        assignment: Optional[str],
+        bit_assignment: Optional[str],
         lsb: int,
-        bitwidth: int,
-        type: str,
+        width: int,
+        bit_field_type: str,
         initial_value: int,
         comment: str
     ):
         "Append list of bit_field in Register class"
         self.bit_field.append(
-            BitField(name, assignment, lsb, bitwidth, type, initial_value, comment)
+            BitField(name, bit_assignment, lsb, width, bit_field_type, initial_value, comment)
         )
 
 class BitField:
     """
     Describe attributes of a bit field here
-    E.G. bit field name, bit assignment
+    E.G. bit field name, bit bit_assignment
     """
     def __init__(
         self,
         name: str,
-        assignment: str,
+        bit_assignment: str,
         lsb: int,
-        bitwidth: int,
-        type: str,
+        width: int,
+        bit_field_type: str,
         initial_value: int,
         comment: str
     ):
         self.name = name
-        # self.assignment = {
+        # self.bit_assignment = {
         #     'lsb': lsb,
-        #     'bitwidth': bitwidth
+        #     'width': width
         # }
-        self.set_assignment(assignment)
-        self.type = type
+        self.set_bit_assignment(bit_assignment)
+        self.bit_field_type = bit_field_type
         self.initial_value = initial_value
         self.comment = comment
 
-    def set_assignment(self, assignment):
+    def set_bit_assignment(self, bit_assignment):
         single_bit_pattern = r"\[?([0-9+])\]?"
         multi_bits_pattern = r"\[?([0-9]+):([0-9]+)\]?"
-        single_match = re.match(single_bit_pattern, assignment)
-        multi_match = re.match(multi_bits_pattern, assignment)
+        single_match = re.match(single_bit_pattern, bit_assignment)
+        multi_match = re.match(multi_bits_pattern, bit_assignment)
         if multi_match:
-            assert multi_match.group(1) >= multi_match.group(2), f'{assignment} is not "downto" description'
-            self.assignment = {
+            assert multi_match.group(1) >= multi_match.group(2), f'{bit_assignment} is not "downto" description'
+            self.bit_assignment = {
                 'lsb': multi_match.group(2),
                 'width': int(multi_match.group(1)) - int(multi_match.group(2)) + 1
             }
         elif single_match:
-            self.assignment = {
+            self.bit_assignment = {
                 'lsb': single_match.group(1),
                 'width': 1
             }
         else:
-            raise ValueError(f'assignment of {self.name} is None or {assignment} is invalid description')
+            raise ValueError(f'bit_assignment of {self.name} is None or {bit_assignment} is invalid description')
 
     def dict(self) -> Dict[str, int|str]:
         "Return bit_field in Dict format"
         return {
             'name': self.name,
-            'assignment': self.assignment,
-            'type': self.type,
+            'bit_assignment': self.bit_assignment,
+            'bit_field_type': self.bit_field_type,
             'initial_value': self.initial_value,
             'comment': self.comment
         }
@@ -237,10 +239,10 @@ def main():
 
         register.append_bit_field(
             item['bit_field_name'],
-            item['assignment'],
+            item['bit_assignment'],
             item['lsb'],
-            item['bitwidth'],
-            item['type'],
+            item['width'],
+            item['bit_field_type'],
             item['initial_value'],
             item['comment']
         )
@@ -248,3 +250,5 @@ def main():
     for reg in registers:
         print(f'register_name={reg.name}')
         pprint.pprint(reg.dict())
+
+    print(yaml_io.load())

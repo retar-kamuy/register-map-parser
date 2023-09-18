@@ -1,0 +1,53 @@
+register_block:
+  name:
+    cell_location:
+      col: 1
+      row: 0
+  byte_size:
+    cell_location:
+      col: 1
+      row: 1
+
+register:
+  name:
+    cell_location:
+      col: 1
+      row: 3
+  offset_address:
+    cell_location:
+      col: 2
+      row: 3
+
+bit_field:
+  name:
+    cell_location:
+      col: 3
+      row: 3
+  bit_assignment:
+    cell_location:
+      col: 4
+      row: 3
+    lsb:
+      cell_location:
+        col: 5
+        row: 3
+    width:
+      cell_location:
+        col: 6
+        row: 3
+  type:
+    cell_location:
+      col: 7
+      row: 3
+  initial_value:
+    cell_location:
+      col: 8
+      row: 3
+  reference:
+    cell_location:
+      col: 9
+      row: 3
+  comment:
+    cell_location:
+      col: 10
+      row: 3
