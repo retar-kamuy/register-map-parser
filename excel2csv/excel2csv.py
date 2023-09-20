@@ -8,104 +8,29 @@ import yaml_io
 class SpreadsheetFormat:
     """Attributes of Register Block"""
     def __init__(self):
-        self.block_name = {
-            'cell_location': {
-                'row': 0,
-                'col': 1
-            }
-        }
+        self.cell_locations_obj = yaml_io.load()
+        self.set_cell_location()
 
-        self.byte_size = {
-            'cell_location': {
-                'row': 1,
-                'col': 1
-            }
-        }
-
-        self.attributes = [
-            {
-                'name': 'register_name',
-                'cell_location': {
-                    'row': 3,
-                    'col': 1
-                }
-            },
-            {
-                'name': 'offset_address',
-                'cell_location': {
-                    'row': 3,
-                    'col': 2
-                }
-            },
-            {
-                'name': 'bit_field_name',
-                'cell_location': {
-                    'row': 3,
-                    'col': 3
-                }
-            },
-            {
-                'name': 'bit_assignment',
-                'cell_location': {
-                    'row': 3,
-                    'col': 4
-                }
-            },
-            {
-                'name': 'lsb',
-                'cell_location': {
-                    'row': 3,
-                    'col': 5
-                }
-            },
-            {
-                'name': 'width',
-                'cell_location': {
-                    'row': 3,
-                    'col': 6
-                }
-            },
-            {
-                'name': 'bit_field_type',
-                'cell_location': {
-                    'row': 3,
-                    'col': 7
-                }
-            },
-            {
-                'name': 'initial_value',
-                'cell_location': {
-                    'row': 3,
-                    'col': 8
-                }
-            },
-            {
-                'name': 'reference',
-                'cell_location': {
-                    'row': 3,
-                    'col': 9
-                }
-            },
-            {
-                'name': 'comment',
-                'cell_location': {
-                    'row': 3,
-                    'col': 10
-                }
-            },
-        ]
-
-    def get_names(self) -> List:
-        return [attr['name'] for attr in self.attributes]
+    def set_cell_location(self):
+        self.register_block = self.cell_locations_obj['register_block']
+        self.register = self.cell_locations_obj['register']
+        self.bit_field = self.cell_locations_obj['bit_field']
 
     def get_usecols(self) -> List:
-        return [attr['cell_location']['col'] for attr in self.attributes]
+        cols = []
+        for key in self.register.keys():
+            cols.append(self.register[key]['cell_location']['col'])
+        for key in self.bit_field.keys():
+            cols.append(self.bit_field[key]['cell_location']['col'])
+        return cols
 
     def get_skiprows(self) -> List:
-        attr_row = self.attributes[0]['cell_location']['row']
-        for attr in self.attributes:
-            assert attr_row == attr['cell_location']['row'], 'Rows set in attributes do not match'
-        return list(range(attr_row))
+        map_top = self.register['name']['cell_location']['row']
+        for key in self.register.keys():
+            assert map_top == self.register[key]['cell_location']['row'], 'Rows set in attributes do not match'
+        for key in self.bit_field.keys():
+            assert map_top == self.bit_field[key]['cell_location']['row'], 'Rows set in attributes do not match'
+        return list(range(map_top + 1))
 
 class RegisterMap:
     """
@@ -222,8 +147,7 @@ def main():
         'sample.xlsx',
         sheet_name='block_0',
         usecols=sheet_format.get_usecols(),
-        names=sheet_format.get_names(),
-        # header=None,
+        header=None,
         skiprows=sheet_format.get_skiprows()
     )
     print(df)
@@ -233,22 +157,23 @@ def main():
     register = None
     for label in range(len(df)):
         item = df.loc[label, :]
-        if isinstance(item['register_name'], str):
-            register = Register(item['register_name'], item['offset_address'])
+        print(item[3])
+        name_column = sheet_format.register['name']['cell_location']['col']
+        if isinstance(item[name_column], str):
+            offset_address_column = sheet_format.register['offset_address']['cell_location']['col']
+            register = Register(item[name_column], item[offset_address_column])
             registers.append(register)
 
         register.append_bit_field(
-            item['bit_field_name'],
-            item['bit_assignment'],
-            item['lsb'],
-            item['width'],
-            item['bit_field_type'],
-            item['initial_value'],
-            item['comment']
+            item[sheet_format.bit_field['name']['cell_location']['col']],
+            item[sheet_format.bit_field['bit_assignment']['cell_location']['col']],
+            item[sheet_format.bit_field['lsb']['cell_location']['col']],
+            item[sheet_format.bit_field['width']['cell_location']['col']],
+            item[sheet_format.bit_field['type']['cell_location']['col']],
+            item[sheet_format.bit_field['initial_value']['cell_location']['col']],
+            item[sheet_format.bit_field['comment']['cell_location']['col']]
         )
 
     for reg in registers:
         print(f'register_name={reg.name}')
         pprint.pprint(reg.dict())
-
-    print(yaml_io.load())
